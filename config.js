@@ -4,16 +4,7 @@ module.exports = {
         DATA :{
             UPDATED: 'dataUpdatedEvent'
         },
-        RESERVATION:{
-            CREATE: 'createReservationEvent',
-            READ: 'readReservationEvent',
-            UPDATE: {
-                TICKET_AMOUNT: 'updateReservationTicketAmountEvent',
-                NAME: 'updateReservationName',
-            },
-            DELETE: 'deleteReservationEvent',
-            DELETE_ALL: 'deleteAllReservationEvent',
-        },
+        LOGS: "log",
     },
     LOG_MESSAGES:{
         CONTROLLER_MESSAGES:{
@@ -45,7 +36,7 @@ module.exports = {
         },
         ALL_RESERVATION_REMOVED: {
             status: 0,
-            message: "all reservation removed successfully"
+            message: "all reservations removed successfully"
         },
         RESERVATION_NOT_EXIST: {
             status: -1,
@@ -75,6 +66,19 @@ module.exports = {
         UPDATED_SUCCESSFULLY:{
             status: 0,
             message: "reservation updated successfully"
+        },
+        NOT_UPDATED_SAME_AMOUNT:{
+            status: -1,
+            message: "your reservation's amount of tickets can't be updated because you can't update to the same amount"
+        },
+        CANT_UPDATE_DELETED_RESERVATION:{
+            status: -1,
+            message: "can't update deleted reservation"
+        },
+        LOGS:{
+            status: 0,
+            message: "OK",
+            logs: undefined
         }
     },
 };

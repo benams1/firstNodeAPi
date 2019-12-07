@@ -5,11 +5,13 @@ const { MAX_TICKETS } = require ('./config');
 const { RESPONSES } = require ('./config');
 
 data = {
+    logs: "",
     Users: [
         {
             id: 0,
             name: 'Ben',
-            isAdmin: true
+            isAdmin: true,
+            apiToken: 123456
         },
         {
             id: 1,
@@ -51,7 +53,7 @@ data = {
 
 };
 function dataEvent(event){
-    console.log('data access event: '+event);
+    this.printLog('data access event: '+event);
 
 }
 class dataObj extends events{
@@ -61,12 +63,16 @@ class dataObj extends events{
         this.on(DATA.UPDATED, dataEvent)
     }
 
-    isUserAdmin(userId){
+    printLog(log){
+        this.data.logs += log+"\n";
+        console.log(log);
+    }
+    isUserAdmin(userId, apiToken){
         let user = this.getUser(userId);
         if(user === null){
             return null;
         }
-        return user.isAdmin;
+        return  user.isAdmin  && apiToken == user.apiToken;
     }
 
     getUser(userId){
@@ -87,6 +93,8 @@ class dataObj extends events{
         if(resIndex === null){
             return RESPONSES.RESERVATION_NOT_EXIST;
         }
+        if(this.data.resevations[resIndex].status === false)
+            return RESPONSES.CANT_UPDATE_DELETED_RESERVATION;
         this.data.resevations[resIndex].name = name;
         return RESPONSES.UPDATED_SUCCESSFULLY;
     }
@@ -95,20 +103,24 @@ class dataObj extends events{
         let resIndex = this.getReservationIndex(reservationId);
         if(resIndex === null)
             return RESPONSES.RESERVATION_NOT_EXIST;
-
+        if(this.data.resevations[resIndex].numOfTickets === numberOfTickets)
+            return RESPONSES.NOT_UPDATED_SAME_AMOUNT;
+        if(this.data.resevations[resIndex].status === false)
+            return RESPONSES.CANT_UPDATE_DELETED_RESERVATION;
         let numOfTicksAfterChange = this.getNumOfTickets() - this.data.resevations[resIndex].numOfTickets + numberOfTickets;
-        if(numberOfTickets > MAX_TICKETS)
+        if(numOfTicksAfterChange > MAX_TICKETS)
             return RESPONSES.CANT_UPDATE_NUMBER_OF_TICKETS;
         this.data.resevations[resIndex].numOfTickets = numberOfTickets;
         return RESPONSES.UPDATED_SUCCESSFULLY;
     }
 
     addReservation(numOfTickets, name) {
-        if (numOfTickets + this.getNumOfTickets() > MAX_TICKETS) {
+        if ( numOfTickets + this.getNumOfTickets() > MAX_TICKETS) {
             return RESPONSES.CANT_ADD_RESERVATION;
         }
         let reservation = {
             id: ++this.data.LastReservationId,
+            numOfTickets: numOfTickets,
             date: moment().format("DD-MM-YYYY"),
             name: name,
             status: true
@@ -132,15 +144,16 @@ class dataObj extends events{
     }
 
     getReservationIndex(reservationId){
-        this.data.resevations.forEach((item,index,arr) =>{
-            if (arr[index].id == reservationId){
-                return index;
-            }
-        });
+        for (let i =0 ; i < this.data.resevations.length; ++i){
+            if(reservationId  == this.data.resevations[i].id)
+                return  i;
+        }
         return null;
     }
     deleteAllReservations(){
-        this.data.resevations.forEach((item,index,arr) => arr[index].status = false);
+        for (let i = 0 ; i < this.data.resevations.length ; ++i){
+            this.data.resevations = false;
+        }
         return RESPONSES.ALL_RESERVATION_REMOVED;
     }
     getReservation(reservationId){
@@ -156,12 +169,15 @@ class dataObj extends events{
     }
     getNumOfTickets(){
         let numOfTickets = 0;
-        this.data.resevations.forEach((item,index,arr) =>{
-            if (arr[index].status === true){
-                numOfTickets += arr[index].numOfTickets
+        for (let i = 0; i<this.data.resevations.length; ++i){
+            if (this.data.resevations[i].status === true){
+                numOfTickets += this.data.resevations[i].numOfTickets;
             }
-        });
+        }
         return numOfTickets;
+    }
+    getAllLogs(){
+        return this.data.logs;
     }
 }
 module.exports = new dataObj();
